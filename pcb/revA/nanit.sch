@@ -103,7 +103,7 @@ F 3 "~" H 3900 5350 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L doz:SBM-21 S1
+L nanit-rescue:SBM-21-doz S1
 U 1 1 5E383BDC
 P 1200 5200
 F 0 "S1" H 1200 5315 50  0000 C CNN
@@ -1463,7 +1463,7 @@ Wire Wire Line
 	8250 2900 7900 2900
 Connection ~ 7900 2900
 $Comp
-L doz:CEEH54 TR1
+L nanit-rescue:CEEH54-doz TR1
 U 1 1 5E659661
 P 5300 5050
 F 0 "TR1" H 5275 5175 50  0000 C CNN
@@ -1527,7 +1527,7 @@ $EndComp
 Wire Wire Line
 	1200 1600 1450 1600
 $Comp
-L doz:LT1937 U3
+L nanit-rescue:LT1937-doz U3
 U 1 1 5E42EB7A
 P 3750 1750
 F 0 "U3" H 3750 2115 50  0000 C CNN
