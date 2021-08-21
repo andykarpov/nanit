@@ -1015,15 +1015,15 @@ void lcd_draw_screen()
 			lcd_print_f(F("Pump level: 000"),3,2,0);
 			lcd_print_str(pumpbreak, 3, 0, 15, 2, 0);
 
-			lcd_print_f(F("Time: 00:00:00 "), 3,3,0);
-			lcd_print_str(hour, 2, 0, 9, 3, (settings==state_settings_hours));
-			lcd_print_str(minute, 2, 1, 12, 3, (settings==state_settings_minutes));
-			lcd_print_str(second, 2, 1, 15, 3, 0);
+			lcd_print_f(F("Time:  00:00:00"), 3,3,0);
+			lcd_print_str(hour, 2, 0, 10, 3, (settings==state_settings_hours));
+			lcd_print_str(minute, 2, 1, 13, 3, (settings==state_settings_minutes));
+			lcd_print_str(second, 2, 1, 16, 3, 0);
 
-			lcd_print_f(F("ION 000: 0.00V "),3,4,(settings==state_settings_ion));
+			lcd_print_f(F("ION 000:  0.00V"),3,4,(settings==state_settings_ion));
 			lcd_print_str(ion, 3, 0, 7, 4, (settings==state_settings_ion));
-			lcd_print_str((VoltLevel/100), 1, 0, 12, 4, (settings==state_settings_ion));
-			lcd_print_str((VoltLevel%100), 2, 1, 14, 4, (settings==state_settings_ion));
+			lcd_print_str((VoltLevel/100), 1, 0, 13, 4, (settings==state_settings_ion));
+			lcd_print_str((VoltLevel%100), 2, 1, 15, 4, (settings==state_settings_ion));
 
 			lcd_print_f(F("Pump imp(2): 00"),3,5,(settings==state_settings_pump));
 			lcd_print_str(impulse, 2, 0, 16, 5, (settings==state_settings_pump));
