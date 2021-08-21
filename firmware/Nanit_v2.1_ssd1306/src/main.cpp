@@ -13,13 +13,13 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <Adafruit_SPIDevice.h>
-#include <SoftwareSerial.h>
+//#include <SoftwareSerial.h>
 #include "config.h"
 
-//Adafruit_SSD1306 oled(128, 64, &SPI, PIN_OLED_DC, PIN_OLED_RESET, PIN_OLED_CS);
-Adafruit_SSD1306 oled(128, 64, 11, 13, PIN_OLED_DC, PIN_OLED_RESET, PIN_OLED_CS); // soft spi
+Adafruit_SSD1306 oled(128, 64, &SPI, PIN_OLED_DC, PIN_OLED_RESET, PIN_OLED_CS);
+//Adafruit_SSD1306 oled(128, 64, 11, 13, PIN_OLED_DC, PIN_OLED_RESET, PIN_OLED_CS); // soft spi
 
-SoftwareSerial mySerial(0, 1); 
+//SoftwareSerial mySerial(0, 1); 
 
 #define	BEEP_1		PORTC |= (1<<PORTC2);	PORTC &= ~(1<<PORTC3)
 #define	BEEP_2		PORTC &= ~(1<<PORTC2);	PORTC |= (1<<PORTC3)
@@ -885,8 +885,6 @@ void lcd_draw_graph()
 
 void lcd_draw_screen()
 {
-	mySerial.println(F("lcd_draw_screen"));
-
 	switch(scr)
 	{
 		case state_main: // главный
@@ -1109,13 +1107,11 @@ void check_key()
 
 	if(digitalRead(PIN_BTN1) == LOW ) // если кнопка 1 нажата
 	{
-		mySerial.println(F("Key1"));
 		key = state_key_1;
 		beep(BEEP_TONE_ALARM, 20);
 	}
 	else if(digitalRead(PIN_BTN2) == LOW) // если кнопка 2 нажата
 	{
-		mySerial.println(F("Key1"));
 		key = state_key_2;
 		beep(BEEP_TONE_KEY2, 20);
 	}
@@ -1505,8 +1501,8 @@ void setup()
 {
 	//for (unsigned char f=0; f<237; f++) sbm[f]=0; // на всякий случай
 	
-	mySerial.begin(9600);
-	mySerial.println(F("Nanit v3.0"));
+	//mySerial.begin(9600);
+	//mySerial.println(F("Nanit v3.0"));
 
 	// накачка - выход, выкл
 	pinMode(PIN_PUMP, OUTPUT);
@@ -1518,8 +1514,6 @@ void setup()
 
 	// Включаем остальные пины
 	pins_on();
-
-	mySerial.println(F("Pins on"));
 
 	TCCR2B = 0x00;
 	ASSR|=(1<<AS2); //ассинхронный режим
@@ -1571,8 +1565,6 @@ void setup()
 		EEPROM.put(EEPROM_ADDR_COUNTER, counter);
 	}
 
-	mySerial.println(F("Loaded EEPROM"));
-
 	//check_battery();
 	batt=1;
 
@@ -1584,8 +1576,6 @@ void setup()
 	lcd_init();
 	oled.clearDisplay();
 	oled.display();
-
-	mySerial.println(F("OLED clear"));
 
 	scr=state_boot;
 	lcd_draw_screen();
@@ -1599,7 +1589,6 @@ void loop()
 {
 	if (go_shutdown)
 	{
-		mySerial.println(F("go_shutdown"));
 			go_shutdown=0;
 			// Гасим всё. То есть совсем всё.
 			EIMSK=0x01;  // wake button
@@ -1618,11 +1607,10 @@ void loop()
 			asm("sleep");
 	}
 
-	if (go_to_bed)	{ mySerial.println(F("go_to_bed")); go_to_bed=0; pins_off();}
+	if (go_to_bed)	{ go_to_bed=0; pins_off();}
 
 	if (out_of_bed)
 	{
-		mySerial.println(F("out_of_bed"));
 		out_of_bed=0;
 		pins_on();
 		EIMSK &=~ (1 << INT0);
@@ -1658,13 +1646,6 @@ void loop()
 
 		if (awaken) {check_key(); if (key != state_key_none) process_key();}
 		if ((piip)&&(awaken)&&(beep_level)) {piip=0; beep(BEEP_TONE_PWR, 65);	}
-
-		mySerial.print(F("RTC: "));
-		mySerial.print(hour); mySerial.print(F(":"));
-		mySerial.print(minute); mySerial.print(F(":"));
-		mySerial.print(second); mySerial.println();
-		mySerial.print(F("Counter: ")); mySerial.println(sbm[0]);
-
 
 	} // POWER OFF
 
