@@ -424,7 +424,7 @@ void lcd_clear()
 //Инициализация дисплея
 void lcd_init()
 {
-    oled.begin(SSD1306_SWITCHCAPVCC); // todo
+    oled.begin(SSD1306_SWITCHCAPVCC);
 }
 
 void beep(uint8_t tone, uint8_t duration)
@@ -987,7 +987,7 @@ void lcd_draw_screen()
 				lcd_print_str(alarm_level, 4, 0, 9, 2, (menu==state_menu_alarm));
 				#endif
 			} else {
-				lcd_print_f(F("Alarm      OFF."),3,2,(menu==state_menu_alarm)); 	
+				lcd_print_f(F("Alarm       Off"),3,2,(menu==state_menu_alarm)); 	
 			}
 
 			if (sleep_level) {
@@ -1450,7 +1450,6 @@ void pins_on()
 void pins_off()
 {
 	// отключаем дисплей
-	//TODO!!!
     oled.ssd1306_command(SSD1306_DISPLAYOFF);
 
 	TIMSK0 &=~ (1 << OCIE0A);
