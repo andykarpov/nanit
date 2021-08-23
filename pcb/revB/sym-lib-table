@@ -1,0 +1,4 @@
+(sym_lib_table
+  (lib (name doz)(type Legacy)(uri /home/andy/Documents/Projects/kicad/nanit/pcb/revB/doz.lib)(options "")(descr ""))
+  (lib (name nanit-rescue)(type Legacy)(uri ${KIPRJMOD}/nanit-rescue.lib)(options "")(descr ""))
+)
