@@ -31,7 +31,7 @@
 #define	SENSOR_M_SEL	40 // Выбор через настройки SBM10/SBM21
 
 #ifndef SENSOR_TYPE
-#define SENSOR_TYPE SENSOR_SBM10
+#define SENSOR_TYPE SENSOR_M_SEL
 #endif
 
 // тип батареи
@@ -48,6 +48,16 @@
 
 #ifndef ALARM_TYPE
 #define ALARM_TYPE ALARM_FON
+#endif
+
+// тип работы с oled экраном.
+// пока остановился на software spi, ибо hw spi через раз просыпается из глубокого сна.
+// не было особо времени разбираться.
+#define OLED_SW_SPI     0
+#define OLED_HW_SPI     1
+
+#ifndef OLED_SPI_TYPE
+#define OLED_SPI_TYPE OLED_SW_SPI
 #endif
 
 // адреса в eeprom для хранения настроек

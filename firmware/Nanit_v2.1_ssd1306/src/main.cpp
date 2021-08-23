@@ -9,15 +9,18 @@
 
 #include <Arduino.h>
 #include <EEPROM.h>
-#include <SPI.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <Adafruit_SPIDevice.h>
 //#include <SoftwareSerial.h>
 #include "config.h"
 
-Adafruit_SSD1306 oled(128, 64, &SPI, PIN_OLED_DC, PIN_OLED_RESET, PIN_OLED_CS);
-//Adafruit_SSD1306 oled(128, 64, 11, 13, PIN_OLED_DC, PIN_OLED_RESET, PIN_OLED_CS); // soft spi
+#if (OLED_SPI_TYPE == OLED_HW_SPI)
+#include <SPI.h>
+Adafruit_SSD1306 oled(128, 64, &SPI, PIN_OLED_DC, PIN_OLED_RESET, PIN_OLED_CS); // hw spi
+#else
+Adafruit_SSD1306 oled(128, 64, 11, 13, PIN_OLED_DC, PIN_OLED_RESET, PIN_OLED_CS); // soft spi
+#endif
 
 //SoftwareSerial mySerial(0, 1); 
 
@@ -407,7 +410,7 @@ void lcd_print2(const char *txt, uint8_t x, uint8_t y, bool inv)
   if (inv) {
     oled.setTextColor(SSD1306_BLACK, SSD1306_WHITE); // Black on white
   } else {
-    oled.setTextColor(SSD1306_WHITE); // White on black
+    oled.setTextColor(SSD1306_WHITE, SSD1306_BLACK); // White on black
   }
 
   oled.setCursor(x*6, y*8);
@@ -424,7 +427,7 @@ void lcd_clear()
 //Инициализация дисплея
 void lcd_init()
 {
-    oled.begin(SSD1306_SWITCHCAPVCC);
+    oled.begin(SSD1306_SWITCHCAPVCC, 0, true, true);
 }
 
 void beep(uint8_t tone, uint8_t duration)
@@ -847,6 +850,8 @@ void count_rad()
 			menu = state_menu_alarm;
 			settings = state_settings_hours;
 			lcd_init();
+			lcd_clear();
+			lcd_redraw = 1;
 		}
 
 		alarm_beep = 2; beep(BEEP_TONE_KEY1, 254);
@@ -867,12 +872,14 @@ void lcd_draw_graph()
 
 	oled.drawLine(0, y, 127, y, SSD1306_WHITE);
 
+	oled.fillRect(0, y-22, 128, 22, SSD1306_BLACK);
+
     for (a=0; a < 48; a++)
     {
         val = (sbm[a] * 22 / div_graph_sbm);
-        // val= 22 - val;
-		val = map(val, 0, 255, 0, 22);
-		val = constrain(val, 0, 22);
+		//val = 22 - val;
+		if (val > 21) val = 21; 
+
 		// рисуем по 2 столбика
 		if (val > 0) oled.drawLine(a_cnt, y-1, a_cnt, y - val, SSD1306_WHITE);
         a_cnt++;
@@ -1042,14 +1049,14 @@ void lcd_draw_screen()
 			#if (ALARM_TYPE==ALARM_DOSE)
 				lcd_print_f(F("ATTENTION!"),7,2,0);
 				lcd_print_f(F("Doze exceed"),6,4,0);
-				lcd_print_f(F("000000 mR!"),5,5,0);
-				lcd_print_str(alarm_level, 6, 0, 5, 5, 0);
+				lcd_print_f(F("000000 mR!"),2,5,0);
+				lcd_print_str(alarm_level, 6, 0, 2, 5, 0);
 			break;
 			#else
 				lcd_print_f(F("ALARM!"),7,2,0);
-				lcd_print_f(F("Radiation"),5,4,0);
-				lcd_print_f(F("000000 uR/h!"),5,5,0);
-				lcd_print_str(alarm_level, 6, 0, 5, 5, 0);
+				lcd_print_f(F("Level exceed"),4,4,0);
+				lcd_print_f(F("000000 uR/h!"),2,5,0);
+				lcd_print_str(alarm_level, 6, 0, 2, 5, 0);
 			#endif
 			break; 
 
@@ -1137,7 +1144,7 @@ void process_key()
 						case state_main_today: displaying_dose = state_main_dose; break;
 						case state_main_dose: displaying_dose = state_main_time; break;
 					}
-					lcd_clear();
+					oled.fillRect(0, 56, 128, 8, SSD1306_BLACK);
 					lcd_redraw  = 1;
 					break;
 				
@@ -1435,6 +1442,11 @@ void pins_on()
 	pinMode(PIN_BUZZER1, OUTPUT); 		// PC2 *
 	pinMode(PIN_BUZZER2, OUTPUT); 		// PC3 *
 
+	digitalWrite(PIN_OLED_DC, HIGH);	// SPI master mode
+#if OLED_SPI_TYPE == OLED_HW_SPI
+	SPI.begin();
+#endif
+
 /*
 	// reset, питание дисплея, пищалка - выходы
 	DDRC |=  (1 << DDC0) | (1 << DDC1) | (1 << DDC2) | (1 << DDC3);
@@ -1450,11 +1462,15 @@ void pins_on()
 void pins_off()
 {
 	// отключаем дисплей
-    oled.ssd1306_command(SSD1306_DISPLAYOFF);
+    //oled.ssd1306_command(SSD1306_DISPLAYOFF);
+
+#if OLED_SPI_TYPE == OLED_HW_SPI
+	SPI.end();
+#endif
 
 	TIMSK0 &=~ (1 << OCIE0A);
 	while(ASSR&(1<<TCN2UB)); //ждем пока отдуплится таймер
-	while(!(SPSR & (1<<SPIF))); // Ждём, пока кончит апп. SPI
+	//while(!(SPSR & (1<<SPIF))); // Ждём, пока кончит апп. SPI
 	SPCR = (0 << SPE);
 
 	while (ADIF == 0); //Ждем флага окончания преобразования на случай если сон застал в процессе замера
@@ -1467,14 +1483,25 @@ void pins_off()
 	digitalWrite(PIN_PUMP, LOW);
 	pinMode(PIN_OLED_CS, INPUT); 		// PB1
 	pinMode(PIN_OLED_DC, INPUT); 		// PB2
-	pinMode(PIN_BTN1, INPUT_PULLUP); 	// PD2
-	pinMode(PIN_SENSOR, INPUT_PULLUP); 	// PD3
+	pinMode(PIN_BTN1, INPUT); 			// PD2
+	pinMode(PIN_SENSOR, INPUT); 		// PD3
 	pinMode(PIN_BTN2, INPUT); 			// PD4
 	pinMode(PIN_HV, INPUT); 			// PD5
 	pinMode(PIN_OLED_VCC, INPUT); 		// PC0 *
 	pinMode(PIN_OLED_RESET, INPUT); 	// PC1 *
 	pinMode(PIN_BUZZER1, INPUT); 		// PC2 *
 	pinMode(PIN_BUZZER2, INPUT); 		// PC3 *
+
+	digitalWrite(PIN_OLED_CS, LOW);
+	digitalWrite(PIN_OLED_DC, LOW);
+	digitalWrite(PIN_BTN1, LOW);
+	digitalWrite(PIN_BTN2, LOW);
+	digitalWrite(PIN_SENSOR, LOW);
+	digitalWrite(PIN_HV, LOW);
+	digitalWrite(PIN_OLED_VCC, LOW);
+	digitalWrite(PIN_OLED_RESET, LOW);
+	digitalWrite(PIN_BUZZER1, LOW);
+	digitalWrite(PIN_BUZZER2, LOW);
 
 	// lcd, накачка
 	/*DDRB =  (0 << DDB2)|(0 << DDB3)|(0 << DDB4)|(0 << DDB5) | (1 << DDB0);
@@ -1508,8 +1535,8 @@ void setup()
 	digitalWrite(PIN_PUMP, LOW);
 	
 	// Датчик, кнопка 1 - входы с подтяжками
-	pinMode(PIN_SENSOR, INPUT_PULLUP);
-	pinMode(PIN_BTN1, INPUT_PULLUP);
+	pinMode(PIN_SENSOR, INPUT);
+	pinMode(PIN_BTN1, INPUT);
 
 	// Включаем остальные пины
 	pins_on();
@@ -1618,7 +1645,9 @@ void loop()
 		/*PORTB &= ~(1<<PORTB0); //на всякий...
 		PORTC |= (1<<PORTC0); // питание дисплея вкл*/
 		//if (light_level!=2) PORTC |= (1<<PORTC1); // подсветка вкл
+		//menu=state_menu_alarm;
 		menu=state_menu_alarm;
+		scr=state_main;
 		lcd_init();
 		lcd_clear();
 		lcd_redraw=1;
