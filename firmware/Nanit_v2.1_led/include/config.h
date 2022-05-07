@@ -1,8 +1,6 @@
 #ifndef config_h
 #define config_h
 
-#define F_CPU 8000000L
-
 // конфигурация пинов
 #define PIN_PUMP         8 // PB0
 
@@ -29,7 +27,7 @@
 #define	SENSOR_M_SEL	40 // Выбор через настройки SBM10/SBM21
 
 #ifndef SENSOR_TYPE
-#define SENSOR_TYPE SENSOR_M_SEL
+#define SENSOR_TYPE SENSOR_SMB21
 #endif
 
 // тип батареи

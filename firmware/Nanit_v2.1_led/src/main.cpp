@@ -119,12 +119,13 @@ settings_state_e settings = state_settings_hours;
 
 enum main_state_e {
 	state_main_current = 0,
-	state_main_time
+	state_main_time,
+	state_main_battery
 };
 
 main_state_e displaying_dose = state_main_current;
 
-void beep(uint8_t tone, uint8_t duration);
+void beep(unsigned char tone, unsigned char duration);
 static void pump();
 void lcd_clear();
 void pins_on();
@@ -151,6 +152,7 @@ ISR(INT0_vect) // Кнопка1
 	out_of_bed = 1;
 	piip = 0;
 	beep(BEEP_TONE_ALARM, 20);
+	displaying_dose = state_main_current;
 	key = state_key_none; // пустая обработка, чтобы при выходе из сна, не реагировал на кнопку
 }
 
@@ -336,10 +338,12 @@ void lcd_init()
 	matrix.setBrightness(brightness_level);
 }
 
-void beep(uint8_t tone, uint8_t duration)
+void beep(unsigned char tone, unsigned char duration)
 {
 	if (beep_counter) return;
-	beep_length = duration * 10;
+	//beep_length = duration * 10;
+	//OCR0A = tone;
+	beep_length = duration;
 	OCR0A = tone;
 	TIMSK0 |= (1 << OCIE0A);
 }
@@ -798,6 +802,14 @@ void lcd_draw_screen()
 					matrix.writeDigitNum(4, minute % 10);
 					matrix.drawLeds(beep_counter, false, false, false, true);
                     break;
+
+				case state_main_battery:
+					matrix.writeDigitRaw(0, 0b11111100); // b.
+					matrix.writeDigitNum(1, battery_percent / 100);
+					matrix.writeDigitNum(3, (battery_percent % 100) / 10);
+					matrix.writeDigitNum(4, (battery_percent % 100) % 10);
+					matrix.drawLeds(beep_counter, false, false, false, false);
+					break;
             } // dd
 
             break;
@@ -982,10 +994,11 @@ void process_key()
 				case state_key_none: // ничего не нажато
 				break;
 
-				case state_key_1: // переключение режима отображения в нижней строчке
+				case state_key_1: // переключение режима отображения на главном экране
 					switch (displaying_dose) {
 						case state_main_current: displaying_dose = state_main_time; break;
-						case state_main_time: displaying_dose = state_main_current; break;
+						case state_main_time: displaying_dose = state_main_battery; break;
+						case state_main_battery: displaying_dose = state_main_current; break;
 					}
 					lcd_redraw  = 1;
 					break;
@@ -1376,8 +1389,8 @@ void setup()
 
 	// Звук
 	PRR &=~ (1<<PRTIM0)|(1<<PRADC);
-	TCCR0A |= (1<<WGM01);
-	TCCR0B |= (1<<CS00) | (1<<CS01);
+	TCCR0A |= (1<<WGM01);			 // mode2: ctc
+	TCCR0B |= (1<<CS01); // clock/8
 
 	OCR0A=195;
 	TCNT0=0;
@@ -1401,7 +1414,7 @@ void setup()
 
 	// set defaults if broken EEPROM setup
 	if (impulse == 255 || beep_level == 255 || ion == 255 || sleep_level == 255 || alarm_level == 255 || counter == 255 || brightness_level == 255) {
-		impulse = 2; beep_level = 1; ion = 110; sleep_level = 30; alarm_level = 80; counter = SENSOR_SBM10; brightness_level = 15;
+		impulse = 2; beep_level = 1; ion = 110; sleep_level = 30; alarm_level = 80; counter = SENSOR_SBM21; brightness_level = 3;
 		EEPROM.put(EEPROM_ADDR_IMPULSE, impulse);
 		EEPROM.put(EEPROM_ADDR_BEEP_LEVEL, beep_level);
 		EEPROM.put(EEPROM_ADDR_ION, ion);
