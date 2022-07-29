@@ -1282,7 +1282,7 @@ void check_battery()
 
 	if ((VLcc<batt_warn)&&(!alarm_snooze)) { lcd_clear(); alarm_beep=2; scr=state_low_battery; } // при замере юзер увидит, нефиг расходовать на "биби" и свет остатки батареи
 
-	#ifdef LI_ION
+	#if BATTERY_TYPE == BATTERY_LION
 		if (VLcc<320) VLcc=320;
 		if (VLcc>420) VLcc=420;
 		battery_percent=(VLcc-320);//*100/100//*183/256;//100/140;
@@ -1482,6 +1482,8 @@ void loop()
 		//menu=state_menu_alarm;
 		menu=state_menu_alarm;
 		scr=state_main;
+		displaying_dose=state_main_current;
+		key=state_key_none;
 		lcd_init();
 		lcd_clear();
 		lcd_redraw=1;
