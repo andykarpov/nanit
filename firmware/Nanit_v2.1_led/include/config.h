@@ -27,7 +27,7 @@
 #define	SENSOR_M_SEL	40 // Выбор через настройки SBM10/SBM21
 
 #ifndef SENSOR_TYPE
-#define SENSOR_TYPE SENSOR_SMB21
+#define SENSOR_TYPE SENSOR_SBM21
 #endif
 
 // тип батареи
